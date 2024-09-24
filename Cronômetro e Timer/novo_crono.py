@@ -1,6 +1,16 @@
 #bibliotecas
 import tkinter as Tkinter
 from datetime import datetime, timezone
+import teste_uso_txt_ as txt
+
+import datetime as dt
+
+from google.api_core.operations_v1.operations_client_config import config
+
+# Colocando data e hora no cadastro
+mes = dt.datetime.now().strftime("%m")
+dia = dt.datetime.now().strftime("%d")
+
 
 def Cronometro():
     root.destroy()
@@ -48,14 +58,17 @@ def Cronometro():
     # parar
     def Stop():
         global running
+        txt.Adicionar_horas(counter)
         startcr['state'] = 'normal'
         stopcr['state'] = 'disabled'
         resetcr['state'] = 'normal'
         backcr['state'] = 'normal'
         running = False
-        with open('tempos_salvos.txt', 'w') as arquivo:
-            tempo = str(counter)
-            arquivo.write(tempo)
+        tempo= txt.Adicionar_horas(counter)
+        txt.Add_calendario(mes,dia,tempo)
+
+
+
 
     # reset normal
     def Reset(labelcr):
@@ -72,6 +85,7 @@ def Cronometro():
         else:
             labelcr['text'] = 'Starting...'
 
+
     rootcr = Tkinter.Tk()
     rootcr.title("Escolher")
     rootcr.geometry("400x300")  # faz a janela
@@ -84,7 +98,7 @@ def Cronometro():
     startcr = Tkinter.Button(fcr, text='Start', width=6,bg="lightgreen", command=lambda: Start(labelcr))
     stopcr = Tkinter.Button(fcr, text='Stop', width=6,bg="lightgreen", state='disabled', command=Stop)
     resetcr = Tkinter.Button(fcr, text='Reset', width=6,bg="lightgreen", state='disabled', command=lambda: Reset(labelcr))
-    backcr = Tkinter.Button(fcr, text='Back', width=6, state='disabled')
+    backcr = Tkinter.Button(fcr, text='Back', width=6, state='disabled', )
 
 
     fcr.pack(anchor='center', pady=5)
@@ -127,6 +141,7 @@ def Timer():
         return
 
     def Start(labelmr):
+        startmr.config(text = 'Start')
         global running, counter
         running = True
 
@@ -145,15 +160,24 @@ def Timer():
 
     def Stop():
         global running
+        startmr.config(text="Run", command = lambda : Run(labelmr))
+        startmr['state'] = 'normal'
+        stopmr['state'] = 'disable'
+        resetmr['state'] = 'normal'
+        backmr['state'] = 'normal'
+        running = False
+        txt.Adicionar_horas(counter)
+
+    # Recomeçar
+    def Run(labelmr):
+        global running
+        running = True
+        counter_label(labelmr)
         startmr['state'] = 'normal'
         stopmr['state'] = 'normal'
         resetmr['state'] = 'normal'
         backmr['state'] = 'normal'
-        running = False
-        with open('tempos_salvos.txt', 'w') as arquivo:
-            tempo = str(counter)
-            arquivo.write(tempo)
-
+        startmr.config(text="Start", command = lambda : Start(labelmr))
 
     def Reset(labelmr):
         global counter
@@ -198,39 +222,42 @@ def Timer():
     resetmr.pack(side="left")
     backmr.pack(side="left")
 
+
     rootmr.mainloop()
 
-def Escolhas():
-    while(True):  # O LOOP FUNCIONA MAS A JANELA NUNCA FECHA DE VDD
-        global root
-        # a tal raiz para surgir a janela
-        root = Tkinter.Tk()
-        root.title("Escolher")
-        root.geometry("400x300")#faz a janela
-        root.configure(bg="lightblue")
+# O LOOP FUNCIONA MAS A JANELA NUNCA FECHA DE VDD
+global root
+# a tal raiz para surgir a janela
+root = Tkinter.Tk()
+root.title("Escolher")
+root.geometry("400x300")#faz a janela
+root.configure(bg="lightblue")
 
-        #escrever na tela
-        label = Tkinter.Label(root, text="Faça sua escolha!", fg="green",bg="lightblue", font="Verdana 30 bold")
-        label.place(relx=0.5, rely=0.5, anchor='center')#centralizei
-        label.pack()
+#escrever na tela
+label = Tkinter.Label(root, text="Faça sua escolha!", fg="green",bg="lightblue", font="Verdana 30 bold")
+label.place(relx=0.5, rely=0.5, anchor='center')#centralizei
+label.pack()
 
-        #botoes e suas configs
-        f = Tkinter.Frame(root)
-        cronometro = Tkinter.Button(f, text='Cronômetro', width=9,bg="lightgreen", command=lambda: Cronometro())
-        timer = Tkinter.Button(f, text='Timer', width=9,bg="lightgreen", command=lambda: Timer())
-        f.pack(padx=5, pady=5,anchor="center",)
-        cronometro.pack(side="left")
-        timer.pack()
+#botoes e suas configs
+f = Tkinter.Frame(root)
+cronometro = Tkinter.Button(f, text='Cronômetro', width=9,bg="lightgreen", command=lambda: Cronometro())
+timer = Tkinter.Button(f, text='Timer', width=9,bg="lightgreen", command=lambda: Timer())
+f.pack(padx=5, pady=5,anchor="center",)
+cronometro.pack(side="left")
+timer.pack()
 
-        #loop da janela da tela
-        root.mainloop()
-
-Escolhas()
+#loop da janela da tela
+root.mainloop()
 
 
 '''
-GUARDAR O TEMPO PASSADO, PASSAR PRA TXT
-E DEPOIS FAZER UMA ESTIMATIVA
-FAZER O BOTÃO DE SETAR TEMPO
+LOOPING OU IR DE VOLTA A 1 PAGINA
+
+FAZER O BOTÃO DE SETAR TEMPO?
+
 ARRUMAR A CAIXA DE TXTO DO TIMER PRA HOR/MIN/SEG
+
+FAZER COMPARATIVO DE HORAS
+    GUARDAR O TEMPO PASSADO, PASSAR PRA TXT (ta acontecendo)
+    E DEPOIS FAZER UMA ESTIMATIVA (o gráfico vai ser: escolhe o dia e setar no gráfico{front} )     
 '''
