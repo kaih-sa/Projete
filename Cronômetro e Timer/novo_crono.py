@@ -1,35 +1,28 @@
 #bibliotecas
 import tkinter as Tkinter
 from datetime import datetime, timezone
-import teste_uso_txt_ as txt
+from Estimativas_estudos import Salvar_tempo_no_db
 
-import datetime as dt
-
-from google.api_core.operations_v1.operations_client_config import config
-
-# Colocando data e hora no cadastro
-mes = dt.datetime.now().strftime("%m")
-dia = dt.datetime.now().strftime("%d")
-
+id_usuario = 1
 
 def Cronometro():
     root.destroy()
-    global counter,running
+    global counter,running,contador_pro_db
     counter = 0
+    contador_pro_db = 0
     running = False
 
     def counter_label(labelcr):
         def count():
             if running:
-                global counter
+                global counter,contador_pro_db
 
                 # delay pra começar
                 if counter == 0:
                     display = "Starting..."
 
                 else:
-                    ttcr = datetime.fromtimestamp(counter, timezone.utc)  # conversão do UTC, coisa de horarios
-                    string = ttcr.strftime("%H:%M:%S")
+                    string = "{:02d}:{:02d}:{:02d}".format(counter // 3600, (counter % 3600) // 60, counter % 60)
                     display = string
 
                 labelcr['text'] = display
@@ -41,6 +34,7 @@ def Cronometro():
                  '''
                 labelcr.after(1000, count)
                 counter += 1
+                contador_pro_db += 1
 
         # chama
         count()
@@ -57,18 +51,15 @@ def Cronometro():
 
     # parar
     def Stop():
-        global running
-        txt.Adicionar_horas(counter)
+        global running, contador_pro_db
+        print("Tempo antes do stop:", contador_pro_db)
+        Salvar_tempo_no_db(contador_pro_db,id_usuario)
         startcr['state'] = 'normal'
         stopcr['state'] = 'disabled'
         resetcr['state'] = 'normal'
         backcr['state'] = 'normal'
         running = False
-        tempo= txt.Adicionar_horas(counter)
-        txt.Add_calendario(mes,dia,tempo)
-
-
-
+        contador_pro_db = 0
 
     # reset normal
     def Reset(labelcr):
@@ -85,12 +76,10 @@ def Cronometro():
         else:
             labelcr['text'] = 'Starting...'
 
-
     rootcr = Tkinter.Tk()
     rootcr.title("Escolher")
     rootcr.geometry("400x300")  # faz a janela
     rootcr.configure(bg="lightblue")
-
 
     labelcr = Tkinter.Label(rootcr, text="Contar!", bg="lightblue",fg="green", font="Verdana 30 bold")
     labelcr.pack()
@@ -100,7 +89,6 @@ def Cronometro():
     resetcr = Tkinter.Button(fcr, text='Reset', width=6,bg="lightgreen", state='disabled', command=lambda: Reset(labelcr))
     backcr = Tkinter.Button(fcr, text='Back', width=6, state='disabled', )
 
-
     fcr.pack(anchor='center', pady=5)
     startcr.pack(side="left")
     stopcr.pack(side="left")
@@ -109,33 +97,32 @@ def Cronometro():
 
     rootcr.mainloop()
 
-
 def Timer():
     root.destroy()
-    global running,counter
+    global running,counter,contador_pro_db
+    contador_pro_db = 0
     counter = 0
     running = False
 
     def counter_label(labelmr):
         def count():
             if running:
-                global counter
+                global counter,contador_pro_db
 
                 if counter <= 0:
                     display = "Fim..."
-
 
                 else:
                     ttmr = datetime.fromtimestamp(counter, timezone.utc)# conversão do UTC
                     string = ttmr.strftime("%H:%M:%S")
                     display = string
 
-                #labelmr = Tkinter.Label(rootmr,bg= "lightgreen", text=display, fg="black", font="Verdana 30 bold")
                 labelmr['text'] = display
                 labelmr['bg'] = 'lightblue'
                 labelmr['fg'] = 'green'
                 labelmr.after(1000, count)
                 counter -= 1
+                contador_pro_db += 1
 
         count()
         return
@@ -144,7 +131,24 @@ def Timer():
         startmr.config(text = 'Start')
         global running, counter
         running = True
+        '''
+        Código para 3 entradas de valor para o front:
+        
+        horas_entrada = entry_horas.get()
+        minutos_entrada = entry_min.get()
+        segundos_entrada = entry_segundos.get()
 
+        if horas_entrada.isdigit() and minutos_entrada.isdigit() and segundos_entrada.isdigit():
+            hours = int(horas_entrada)
+            minutes = int(minutos_entrada)
+            seconds = int(segundos_entrada)
+
+            counter = (hours * 3600) + (minutes * 60) + seconds #convertendo tudo pra segundos
+
+        else:
+            labelmr['text'] = "Digite um número válido!"
+            return
+        '''
         time_str = entrymr.get()
         if time_str.isdigit():
             counter = int(time_str)
@@ -159,14 +163,16 @@ def Timer():
         backmr['state'] = 'normal'
 
     def Stop():
-        global running
+        global running,contador_pro_db
         startmr.config(text="Run", command = lambda : Run(labelmr))
         startmr['state'] = 'normal'
-        stopmr['state'] = 'disable'
+        stopmr['state'] = 'disabled'
         resetmr['state'] = 'normal'
         backmr['state'] = 'normal'
         running = False
-        txt.Adicionar_horas(counter)
+        print("Tempo antes do stopmr:", contador_pro_db)
+        Salvar_tempo_no_db(contador_pro_db,id_usuario)
+        contador_pro_db = 0
 
     # Recomeçar
     def Run(labelmr):
@@ -181,7 +187,27 @@ def Timer():
 
     def Reset(labelmr):
         global counter
+        '''
+        Código para 3 entradas de valor para o front:
+        horas_entrada = entry_horas.get()
+        minutos_entrada = entry_min.get()
+        segundos_entrada = entry_segundos.get()
+        
+        if horas_entrada.isdigit() and minutos_entrada.isdigit() and segundos_entrada.isdigit():
+            hours = int(horas_entrada)
+            minutes = int(minutos_entrada)
+            seconds = int(segundos_entrada)
 
+            counter = (hours * 3600) + (minutes * 60) + seconds #convertendo tudo pra segundos
+        else:
+            labelmr['text'] = "Digite um número válido!"
+
+        if not running:
+            resetmr['state'] = 'disable'
+            labelmr['text'] = 'Welcome!'
+        else:
+            labelmr['text'] = 'Starting...'
+        '''
         # Pega o tempo em segundos da entrada do usuário
         time_str = entrymr.get()
 
@@ -196,18 +222,16 @@ def Timer():
         else:
             labelmr['text'] = 'Starting...'
 
-
     rootmr = Tkinter.Tk()
     rootmr.title("Timer")
     rootmr.geometry("400x300")
     rootmr.configure(bg="lightblue")
 
-    labelmr = Tkinter.Label(rootmr, text="Welcome!",bg = 'lightblue', fg="green", font="Verdana 30 bold")
+    labelmr = Tkinter.Label(rootmr, text="Welcome!", bg='lightblue', fg="green", font="Verdana 30 bold")
     labelmr.pack()
 
     entrymr = Tkinter.Entry(rootmr, width=10)
     entrymr.pack()
-
 
     fmr = Tkinter.Frame(rootmr)
     startmr = Tkinter.Button(fmr, text='Start', width=6, command=lambda: Start(labelmr))
@@ -215,22 +239,19 @@ def Timer():
     resetmr = Tkinter.Button(fmr, text='Reset', width=6, state='disabled', command=lambda: Reset(labelmr))
     backmr = Tkinter.Button(fmr, text='Back', width=6, state='disabled')
 
-
     fmr.pack(anchor='center', pady=5)
     startmr.pack(side="left")
     stopmr.pack(side="left")
     resetmr.pack(side="left")
     backmr.pack(side="left")
 
-
     rootmr.mainloop()
 
-# O LOOP FUNCIONA MAS A JANELA NUNCA FECHA DE VDD
 global root
-# a tal raiz para surgir a janela
+# a raiz para surgir a janela
 root = Tkinter.Tk()
 root.title("Escolher")
-root.geometry("400x300")#faz a janela
+root.geometry("400x300")#faz a hforma da janela
 root.configure(bg="lightblue")
 
 #escrever na tela
@@ -249,15 +270,3 @@ timer.pack()
 #loop da janela da tela
 root.mainloop()
 
-
-'''
-LOOPING OU IR DE VOLTA A 1 PAGINA
-
-FAZER O BOTÃO DE SETAR TEMPO?
-
-ARRUMAR A CAIXA DE TXTO DO TIMER PRA HOR/MIN/SEG
-
-FAZER COMPARATIVO DE HORAS
-    GUARDAR O TEMPO PASSADO, PASSAR PRA TXT (ta acontecendo)
-    E DEPOIS FAZER UMA ESTIMATIVA (o gráfico vai ser: escolhe o dia e setar no gráfico{front} )     
-'''
